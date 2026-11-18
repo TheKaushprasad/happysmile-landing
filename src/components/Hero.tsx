@@ -1,4 +1,4 @@
-import { CalendarCheck, MapPin, Sparkles, ArrowRight, Clock, ShieldCheck } from 'lucide-react'
+import { CalendarCheck, MapPin, Sparkles, ArrowRight, Clock, ShieldCheck, PhoneCall } from 'lucide-react'
 import { useBooking } from '../context/BookingContext'
 import { BUSINESS } from '../lib/config'
 
@@ -54,6 +54,16 @@ export default function Hero() {
           <p className="mt-5 flex items-center gap-2 text-sm font-medium text-brand-dark">
             <Clock className="h-4 w-4" /> Skip the waiting. Book your preferred appointment online.
           </p>
+
+          {/* Compact secondary path for visitors who won't self-serve a slot —
+              keeps "Book Your Appointment" the primary action. */}
+          <a
+            href="#callback"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-all hover:gap-2.5 hover:text-brand-dark"
+          >
+            <PhoneCall className="h-4 w-4" /> Short on time? Get a callback in minutes
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
 
         {/* Right */}

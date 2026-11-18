@@ -54,8 +54,8 @@ export default function RequestCallback() {
               Not ready to pick a slot? We'll call you back.
             </h2>
             <p className="mt-3 text-ink-muted">
-              Leave your name and number and our assistant rings you back to help you book —
-              usually within minutes, not hours.
+              Leave your name and number and we'll call you back to help you book — usually within
+              minutes, not hours.
             </p>
             <ul className="mt-5 space-y-2.5 text-sm">
               <li className="flex items-center gap-2.5 text-ink">
@@ -78,9 +78,8 @@ export default function RequestCallback() {
                   We'll call you shortly
                 </h3>
                 <p className="mt-1.5 text-sm text-ink-muted">
-                  Our assistant will ring {fullName.trim().split(' ')[0] || 'you'} on{' '}
-                  {mobile} in {LANGUAGES.find((l) => l.code === language)?.label}. This is a
-                  callback request — no appointment is booked yet.
+                  We'll call {fullName.trim().split(' ')[0] || 'you'} on +91 {mobile} in{' '}
+                  {LANGUAGES.find((l) => l.code === language)?.label} to help you book.
                 </p>
               </div>
             ) : (
@@ -99,14 +98,24 @@ export default function RequestCallback() {
 
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-ink">Mobile Number</label>
-                  <input
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                    placeholder="e.g. 98765 43210"
-                    type="tel"
-                    autoComplete="tel"
-                    className={inputCls(Boolean(errors.mobile))}
-                  />
+                  <div className="flex">
+                    <span
+                      className={[
+                        'inline-flex items-center rounded-l-xl border border-r-0 px-3 text-sm font-medium text-ink-muted',
+                        errors.mobile ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-slate-50',
+                      ].join(' ')}
+                    >
+                      +91
+                    </span>
+                    <input
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      placeholder="98765 43210"
+                      type="tel"
+                      autoComplete="tel"
+                      className={inputCls(Boolean(errors.mobile)).replace('rounded-xl', 'rounded-r-xl')}
+                    />
+                  </div>
                   {errors.mobile && <p className="mt-1 text-sm text-red-500">{errors.mobile}</p>}
                 </div>
 
@@ -136,7 +145,7 @@ export default function RequestCallback() {
                       className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-brand focus:ring-brand"
                     />
                     <span className="text-sm leading-relaxed text-ink-muted">
-                      I agree to be contacted by phone, WhatsApp or automated voice assistant.{' '}
+                      I agree to be contacted by phone or WhatsApp.{' '}
                       <span className="text-brand">*</span>
                     </span>
                   </label>

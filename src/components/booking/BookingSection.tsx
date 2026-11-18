@@ -250,10 +250,7 @@ export default function BookingSection() {
                 </dl>
                 <div className="mt-5 flex items-start gap-2 rounded-xl bg-brand-soft p-3 text-xs leading-relaxed text-brand-dark">
                   <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    Slots shown are <strong>demo availability</strong>. Your request is confirmed by
-                    the clinic once they verify the slot.
-                  </span>
+                  <span>We'll confirm your preferred slot with the clinic shortly after you submit.</span>
                 </div>
               </aside>
             )}
@@ -351,9 +348,6 @@ function StepClinic({
   return (
     <div>
       <StepTitle n={2} title="Select Your Clinic" />
-      <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-        <Info className="h-3.5 w-3.5" /> Demonstration clinic data
-      </span>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <label className="block">
@@ -441,9 +435,6 @@ function StepDateTime({
           <p className="text-sm font-medium text-ink">
             {date ? `Available slots for ${formatDisplayDate(date)}` : 'Select a date to see slots'}
           </p>
-          <span className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-700">
-            <Info className="h-3.5 w-3.5" /> Demo availability — not live slots
-          </span>
 
           <div className="mt-4 space-y-4">
             {SLOT_PERIODS.map((period) => {
@@ -518,9 +509,10 @@ function StepContact({
           error={errors.mobile}
           value={contact.mobile}
           onChange={(v) => onChange({ mobile: v })}
-          placeholder="e.g. 98765 43210"
+          placeholder="98765 43210"
           type="tel"
           autoComplete="tel"
+          prefix="+91"
         />
         <Field
           label="Email"
@@ -560,8 +552,8 @@ function StepContact({
               className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-brand focus:ring-brand"
             />
             <span className="text-sm leading-relaxed text-ink-muted">
-              I agree to be contacted by {BUSINESS.brand} by phone, WhatsApp or automated voice
-              assistant about my appointment. <span className="text-brand">*</span>
+              I agree to be contacted by {BUSINESS.brand} by phone or WhatsApp about my
+              appointment. <span className="text-brand">*</span>
             </span>
           </label>
           {errors.consent && (
@@ -583,6 +575,7 @@ function Field({
   placeholder,
   type = 'text',
   autoComplete,
+  prefix,
 }: {
   label: string
   value: string
@@ -593,7 +586,15 @@ function Field({
   placeholder?: string
   type?: string
   autoComplete?: string
+  prefix?: string
 }) {
+  const inputCls = [
+    'w-full border bg-white px-4 py-3 text-ink outline-none transition placeholder:text-slate-400 focus:ring-2',
+    prefix ? 'rounded-r-xl' : 'rounded-xl',
+    error
+      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+      : 'border-slate-200 focus:border-brand focus:ring-brand-light',
+  ].join(' ')
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-ink">
@@ -601,20 +602,27 @@ function Field({
         {required && <span className="text-brand"> *</span>}
         {optional && <span className="font-normal text-ink-muted"> (optional)</span>}
       </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        aria-invalid={Boolean(error)}
-        className={[
-          'w-full rounded-xl border bg-white px-4 py-3 text-ink outline-none transition placeholder:text-slate-400 focus:ring-2',
-          error
-            ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-            : 'border-slate-200 focus:border-brand focus:ring-brand-light',
-        ].join(' ')}
-      />
+      <div className="flex">
+        {prefix && (
+          <span
+            className={[
+              'inline-flex items-center rounded-l-xl border border-r-0 px-3 text-sm font-medium text-ink-muted',
+              error ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-slate-50',
+            ].join(' ')}
+          >
+            {prefix}
+          </span>
+        )}
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          aria-invalid={Boolean(error)}
+          className={inputCls}
+        />
+      </div>
       {error && <span className="mt-1.5 block text-sm text-red-500">{error}</span>}
     </label>
   )
@@ -668,7 +676,7 @@ function StepConfirmation({
         </p>
         <p className="mt-3 flex items-start gap-1.5 text-xs text-ink-muted">
           <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" />
-          Our assistant may call you on {result.contact.mobile} in{' '}
+          We'll call you on +91 {result.contact.mobile} in{' '}
           {languageLabel(result.contact.language)} to confirm this slot.
         </p>
       </div>

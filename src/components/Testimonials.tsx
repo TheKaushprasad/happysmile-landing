@@ -74,11 +74,6 @@ export default function Testimonials() {
               />
             ))}
           </div>
-
-          <p className="mt-6 text-center text-xs text-ink-muted">
-            Sample testimonials shown for demonstration. Verified patient reviews will appear here
-            once collected.
-          </p>
         </div>
       </div>
     </section>
