@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+
+  /* Offset anchored sections so the sticky navbar doesn't cover headings. */
+  section[id] {
+    scroll-margin-top: 88px;
+  }
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand px-6 py-3 text-white shadow-card hover:bg-brand-dark hover:shadow-card-hover active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn border border-brand/30 bg-white px-6 py-3 text-brand hover:border-brand hover:bg-brand-soft active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn px-4 py-2 text-ink-muted hover:text-brand;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand-light px-4 py-1.5 text-sm font-semibold text-brand-dark;
+  }
+
+  .card {
+    @apply rounded-2xl border border-slate-100 bg-white shadow-card;
+  }
+}
