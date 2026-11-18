@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { CONFIG } from '../config.js'
 import { addLead, isDnd } from '../store.js'
-import { addLeadToCampaign } from '../sarvam.js'
+import { placeOutboundCall } from '../sarvam.js'
 import type { CampaignLead } from '../types.js'
 
 export const leadsRouter = Router()
@@ -30,13 +30,18 @@ leadsRouter.post('/', async (req, res) => {
   }
 
   const stored = addLead({ ...lead, campaignId })
-  const result = await addLeadToCampaign(campaignId, lead)
+
+  // Fire the callback immediately: the agent rings the end user from the
+  // virtual number. (Set the Sarvam ids in .env to leave demo mode.)
+  const webhookUrl = CONFIG.publicWebhookUrl || undefined
+  const result = await placeOutboundCall(lead, webhookUrl)
 
   return res.status(result.ok ? 200 : 502).json({
     ok: result.ok,
     leadId: stored.id,
-    queued: result.ok,
+    called: result.ok,
     mode: result.mode,
+    ...(result.attemptId ? { attemptId: result.attemptId } : {}),
     ...(result.detail ? { detail: result.detail } : {}),
   })
 })

@@ -16,12 +16,34 @@ Starts on **http://localhost:3001** in **DEMO mode** (no Sarvam key → it logs 
 
 | Route | Who calls it | Purpose |
 | --- | --- | --- |
-| `POST /api/leads` | The website (`submitLead`) | Validate consent + DND, store the lead, add it to the Sarvam campaign |
+| `POST /api/leads` | The website (`submitLead`) | Validate consent + DND, store the lead, and **place an instant outbound call** (the agent rings the user from your virtual number) |
 | `POST /api/tools/check-availability` | The Sarvam agent | `{ clinic, date }` → `{ open_slots, alternatives }` |
 | `POST /api/tools/create-booking` | The Sarvam agent | `{ name, phone, treatment, clinic, date, slot, language }` → `{ status, confirmation_id }` |
 | `POST /api/webhooks/sarvam` | Sarvam | Call-outcome event → update lead/booking, honour opt-outs |
 | `GET /health` | You | Liveness + mode |
 | `GET /api/_debug/snapshot` | You (dev) | Peek at the in-memory bookings/leads/DND |
+
+## How the callback works
+
+When someone submits the callback form, `/api/leads` calls Sarvam's **Instant Outbound** endpoint:
+
+```
+POST {SARVAM_OUTBOUNDS_URL}/v1/orgs/{SARVAM_ORG_ID}/workspaces/{SARVAM_WORKSPACE_ID}/outbounds
+X-API-Key: {SARVAM_API_KEY}
+{
+  "app_config": {
+    "app_id": "{SARVAM_APP_ID}",
+    "app_version": {SARVAM_APP_VERSION},
+    "connection_config": { "connection_id": "{SARVAM_CONNECTION_ID}", "agent_phone_number": "{SARVAM_AGENT_NUMBER}" },
+    "agent_variables": { "name": "...", "kind": "...", "treatment": "...", "clinic": "..." },
+    "app_overrides": { "initial_language_name": "Tamil" }
+  },
+  "user_config": { "user_phone_number": "+91..." },
+  "webhook_config": { "url": "{PUBLIC_WEBHOOK_URL}" }
+}
+```
+
+Sarvam returns an `attempt_id`, the agent calls the user **from your virtual number** (`agent_phone_number`), and posts the outcome to your webhook when the call ends. Set the seven `SARVAM_*` values in `.env` to leave demo mode.
 
 ## Try it
 
