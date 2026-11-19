@@ -1,3 +1,25 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+// Minimal .env loader (no dependency): populate process.env from server/.env.
+function loadEnvFile() {
+  const path = resolve(process.cwd(), '.env')
+  if (!existsSync(path)) return
+  for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/)
+    if (!m) continue
+    let val = m[2].trim()
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1)
+    }
+    if (process.env[m[1]] === undefined) process.env[m[1]] = val
+  }
+}
+loadEnvFile()
+
 export const CONFIG = {
   port: Number(process.env.PORT ?? 3001),
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
