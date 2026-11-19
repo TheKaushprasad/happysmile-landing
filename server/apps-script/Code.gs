@@ -20,6 +20,13 @@
  * later: Deploy -> Manage deployments -> edit -> Version: New version -> Deploy
  * (the URL stays the same).
  */
+// Visiting the web-app URL in a browser hits this — handy to confirm it's live.
+function doGet() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, service: 'HappySmile intake' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -106,7 +113,7 @@ function doPost(e) {
  *   SARVAM_CONNECTION_ID  telephony connection id
  *   SARVAM_AGENT_NUMBER   your Sarvam virtual number (caller id)
  * Optional:
- *   SARVAM_APP_VERSION    default 1
+ *   SARVAM_APP_VERSION    default 5
  *   SELF_WEBHOOK_URL      this web app's /exec URL (where Sarvam posts the call
  *                         outcome, which this same script routes to "voice ai")
  */
