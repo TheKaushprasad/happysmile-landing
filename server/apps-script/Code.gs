@@ -1,19 +1,22 @@
 /**
- * HappySmile Bookings — Google Sheets intake.
+ * HappySmile — Google Sheets intake (sheet: "Happy smile").
  *
- * Paste this into the "HappySmile Bookings" sheet:
+ * Paste this into that spreadsheet:
  *   Extensions → Apps Script → paste → Deploy → New deployment →
  *   Web app → Execute as: Me, Who has access: Anyone → Deploy → copy the URL.
  *
  * Put that URL in server/.env as SHEETS_WEBHOOK_URL. The backend POSTs one JSON
- * object per booking/callback; this appends it as a row under the headers.
+ * object per submission; bookings go to the "booking" tab and callback requests
+ * to the "callback request" tab.
  */
 function doPost(e) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000); // avoid races when two submissions arrive together
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
     var d = JSON.parse(e.postData.contents);
+    var tabName = d.type === 'Booking' ? 'booking' : 'callback request';
+    var sheet = ss.getSheetByName(tabName) || ss.insertSheet(tabName);
     sheet.appendRow([
       d.timestamp || new Date().toISOString(),
       d.type || '',
@@ -29,7 +32,7 @@ function doPost(e) {
       d.source || ''
     ]);
     return ContentService
-      .createTextOutput(JSON.stringify({ ok: true }))
+      .createTextOutput(JSON.stringify({ ok: true, tab: tabName }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService

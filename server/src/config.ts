@@ -20,8 +20,8 @@ export const CONFIG = {
   sheets: {
     // Google Apps Script web-app URL that appends a row to the Bookings sheet.
     webhookUrl: process.env.SHEETS_WEBHOOK_URL ?? '',
-    // The HappySmile Bookings spreadsheet (for reference).
-    spreadsheetId: process.env.SHEETS_SPREADSHEET_ID ?? '1Rck9CQKla0dz-xp5_8VHDqXvcdsvot2nAQKvfUaHjg8',
+    // The "Happy smile" spreadsheet (booking + callback request tabs).
+    spreadsheetId: process.env.SHEETS_SPREADSHEET_ID ?? '1MM8PKNBrGa2fv4RS-Fu23-PQyIPBrFY5-foH3zI3CBU',
   },
   webhookSecret: process.env.WEBHOOK_SECRET ?? '',
   callingHours: { startHour: 9, endHour: 19 },
