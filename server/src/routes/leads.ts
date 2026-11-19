@@ -2,7 +2,6 @@ import { Router } from 'express'
 import { CONFIG } from '../config.js'
 import { addLead, isDnd } from '../store.js'
 import { placeOutboundCall } from '../sarvam.js'
-import { appendBookingRow } from '../sheets.js'
 import type { CampaignLead } from '../types.js'
 
 export const leadsRouter = Router()
@@ -32,18 +31,15 @@ leadsRouter.post('/', async (req, res) => {
 
   const stored = addLead({ ...lead, campaignId })
 
-  // Record the submission in the Google Sheet (booking or callback).
-  const sheet = await appendBookingRow(lead)
-
-  // Fire the callback immediately: the agent rings the end user from the
-  // virtual number. (Set the Sarvam ids in .env to leave demo mode.)
+  // Note: the Google Sheet + Supabase are written DIRECTLY from the website, so
+  // capture works even when this backend is offline. The backend only places the
+  // outbound call here.
   const webhookUrl = CONFIG.publicWebhookUrl || undefined
   const result = await placeOutboundCall(lead, webhookUrl)
 
   return res.status(result.ok ? 200 : 502).json({
     ok: result.ok,
     leadId: stored.id,
-    logged: sheet.ok,
     called: result.ok,
     mode: result.mode,
     ...(result.attemptId ? { attemptId: result.attemptId } : {}),
