@@ -139,7 +139,7 @@ function placeSarvamCall(d) {
   if (webhookUrl) body.webhook_config = { url: webhookUrl };
 
   try {
-    UrlFetchApp.fetch(
+    var resp = UrlFetchApp.fetch(
       'https://apps.sarvam.ai/api/outbounds/v1/orgs/' + orgId + '/workspaces/' + wsId + '/outbounds',
       {
         method: 'post',
@@ -149,7 +149,11 @@ function placeSarvamCall(d) {
         muteHttpExceptions: true
       }
     );
+    // Visible in Apps Script → Executions. 200/201 = call placed.
+    // 401/403 = API key/permission issue. 404 = instant-outbound not enabled on
+    // your plan (use the campaign path, or ask Sarvam to enable the REST API).
+    console.log('Sarvam outbound: ' + resp.getResponseCode() + ' ' + resp.getContentText());
   } catch (err) {
-    // best-effort: the callback row is already saved, so a human can follow up
+    console.log('Sarvam outbound error: ' + err);
   }
 }
