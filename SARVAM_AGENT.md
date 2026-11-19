@@ -29,10 +29,10 @@ A callback submission on the website triggers the agent to call that person (the
 | `treatment` | Treatment | treatment of interest |
 | `date` | Preferred date | preferred day |
 | `slot` | Slot | preferred time |
-| `outcome` | Outcome | `Interested` / `Booking requested` / `Needs representative` / `Not interested` / `No answer` |
+| `status` | Outcome | `Interested` / `Booking requested` / `Needs representative` / `Not interested` / `No answer` |
 | `notes` | Notes | short summary; when handing off, the exact question + "representative to call" |
 
-Whenever you use the representative line, set `outcome = "Needs representative"` and put the question in `notes`. (`name` and `phone` are passed in and echoed back automatically.)
+Whenever you use the representative line, set `status = "Needs representative"` and put the question in `notes`. (`name` and `phone_number` are passed in and echoed back automatically; your agent's variable list calls the outcome field `status`.)
 
 ---
 

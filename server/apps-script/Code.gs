@@ -27,6 +27,14 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var d = JSON.parse(e.postData.contents);
 
+    // Flatten nested variable bags — a call-outcome webhook may nest the fields
+    // the agent collected under variables / agent_variables / metadata.
+    ['variables', 'agent_variables', 'metadata'].forEach(function (k) {
+      if (d[k] && typeof d[k] === 'object') {
+        for (var f in d[k]) if (!(f in d)) d[f] = d[k][f];
+      }
+    });
+
     var tab;
     if (d.outcome || d.status) tab = 'voice ai';
     else if (d.type === 'Booking') tab = 'booking';
@@ -35,7 +43,7 @@ function doPost(e) {
     var sheet = ss.getSheetByName(tab) || ss.insertSheet(tab);
 
     // Value for every header name we might see (lowercased keys).
-    var phone = d.mobile || d.phone || '';
+    var phone = d.mobile || d.phone || d.phone_number || '';
     var values = {
       'timestamp': d.timestamp || new Date().toISOString(),
       'date & time': d.timestamp || new Date().toISOString(),
@@ -119,7 +127,7 @@ function placeSarvamCall(d) {
 
   var phone = d.mobile || d.phone || '';
   if (!phone) return;
-  var appVersion = Number(p.getProperty('SARVAM_APP_VERSION') || '1');
+  var appVersion = Number(p.getProperty('SARVAM_APP_VERSION') || '5');
   var webhookUrl = p.getProperty('SELF_WEBHOOK_URL') || ScriptApp.getService().getUrl();
 
   var body = {
@@ -129,8 +137,9 @@ function placeSarvamCall(d) {
       connection_config: { connection_id: connectionId, agent_phone_number: agentNumber },
       agent_variables: {
         name: d.name || '',
-        language: d.language || '',
-        source: d.source || 'callback'
+        user_name: d.name || '',
+        phone_number: phone,
+        kind: 'callback'
       },
       app_overrides: { initial_language_name: SARVAM_LANG[d.language] || 'English' }
     },
