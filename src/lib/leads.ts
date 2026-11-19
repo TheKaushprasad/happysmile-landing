@@ -13,7 +13,18 @@
  */
 import { track } from './analytics'
 import { CAMPAIGN } from './config'
+import { treatmentById } from '../data/treatments'
+import { clinicById } from '../data/clinics'
 import type { CampaignLead, ConfirmedBooking, ContactDetails } from '../types'
+
+/** Readable names for the sheet / voice agent (not internal ids). */
+function treatmentName(id: string | null): string | null {
+  return id ? (treatmentById(id)?.name ?? id) : null
+}
+function clinicName(id: string | null): string | null {
+  const c = id ? clinicById(id) : undefined
+  return c ? `${c.name}, ${c.city}` : (id ?? null)
+}
 
 /** A booked slot → a short confirmation call from the agent. */
 export function buildBookingLead(b: ConfirmedBooking): CampaignLead {
@@ -26,8 +37,8 @@ export function buildBookingLead(b: ConfirmedBooking): CampaignLead {
     consent: b.contact.consent,
     createdAt: new Date().toISOString(),
     variables: {
-      treatment: b.treatmentId,
-      clinic: b.clinicId,
+      treatment: treatmentName(b.treatmentId),
+      clinic: clinicName(b.clinicId),
       date: b.date,
       slot: b.slot,
       reference: b.reference,
@@ -49,8 +60,8 @@ export function buildCallbackLead(
     consent: contact.consent,
     createdAt: new Date().toISOString(),
     variables: {
-      treatment: context.treatmentId ?? null,
-      clinic: context.clinicId ?? null,
+      treatment: treatmentName(context.treatmentId ?? null),
+      clinic: clinicName(context.clinicId ?? null),
       date: null,
       slot: null,
       reference: null,
