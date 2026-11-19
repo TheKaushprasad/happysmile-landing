@@ -13,7 +13,6 @@
  */
 import { track } from './analytics'
 import { CAMPAIGN } from './config'
-import { saveSubmission } from './supabase'
 import { writeToSheet } from './sheetlog'
 import { treatmentById } from '../data/treatments'
 import { clinicById } from '../data/clinics'
@@ -78,9 +77,8 @@ export function buildCallbackLead(
  */
 export async function submitLead(lead: CampaignLead): Promise<boolean> {
   track('lead_submitted', { kind: lead.kind, language: lead.language })
-  // Durable store + sheet, written straight from the website (work even if the
-  // local backend is down).
-  void saveSubmission(lead)
+  // Write straight to the sheet from the website, so it fills even if the local
+  // backend is down.
   writeToSheet(lead)
   // eslint-disable-next-line no-console
   console.info('[sarvam] lead →', lead)
