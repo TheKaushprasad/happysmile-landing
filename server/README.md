@@ -35,6 +35,25 @@ Every submission is appended to the **Happy smile** spreadsheet — bookings to 
 
 The **same web-app URL** also accepts Sarvam **call outcomes** (payloads with `outcome`/`status`) and appends them to the **voice ai** tab — so point your Sarvam call-completion webhook at this one URL too.
 
+## AI voice call on each callback (serverless)
+
+When a callback lands, the Apps Script (`apps-script/Code.gs` → `placeSarvamCall`) calls Sarvam's **instant-outbound API** so the agent rings the person. The agent collects details and, for anything it can't answer, says *"our representative will call you shortly"*; when the call ends Sarvam posts the outcome back to the **same web-app URL**, which writes it to the **voice ai** tab. No server needed.
+
+**Set these in Apps Script → ⚙ Project Settings → Script properties:**
+
+| Property | Where to get it |
+| --- | --- |
+| `SARVAM_API_KEY` | Sarvam workspace API key |
+| `SARVAM_ORG_ID` | org id |
+| `SARVAM_WORKSPACE_ID` | workspace id |
+| `SARVAM_APP_ID` | the agent id (e.g. `Conversatio-eee27e9e-d31f`) |
+| `SARVAM_CONNECTION_ID` | telephony connection id |
+| `SARVAM_AGENT_NUMBER` | your Sarvam virtual number (caller id) |
+| `SARVAM_APP_VERSION` | optional, default `1` |
+| `SELF_WEBHOOK_URL` | optional — this web app's `/exec` URL (auto-detected if omitted) |
+
+Then **re-deploy** the web app (Manage deployments → edit → New version). Until the properties are set, calls are skipped and the sheet still works. Agent behaviour + the variables it must set (`outcome`, `notes`, `treatment`, `clinic`, `date`, `slot`) are in `../SARVAM_AGENT.md` §0.
+
 ## How the callback works
 
 When someone submits the callback form, `/api/leads` calls Sarvam's **Instant Outbound** endpoint:

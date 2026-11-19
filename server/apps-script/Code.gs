@@ -69,6 +69,9 @@ function doPost(e) {
     });
     sheet.appendRow(row);
 
+    // A new callback request → have the AI voice agent call this person now.
+    if (tab === 'callback request') placeSarvamCall(d);
+
     return ContentService
       .createTextOutput(JSON.stringify({ ok: true, tab: tab }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -78,5 +81,75 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   } finally {
     lock.releaseLock();
+  }
+}
+
+/**
+ * Place an outbound call via Sarvam's instant-outbound API so the AI voice agent
+ * rings the person who just requested a callback. Credentials come from Script
+ * Properties (Project Settings → Script properties). If they're not set this is
+ * a no-op, so the sheet keeps working while you finish the Sarvam setup.
+ *
+ * Required Script properties:
+ *   SARVAM_API_KEY        your workspace API key (X-API-Key)
+ *   SARVAM_ORG_ID         org id
+ *   SARVAM_WORKSPACE_ID   workspace id
+ *   SARVAM_APP_ID         the agent id (e.g. Conversatio-eee27e9e-d31f)
+ *   SARVAM_CONNECTION_ID  telephony connection id
+ *   SARVAM_AGENT_NUMBER   your Sarvam virtual number (caller id)
+ * Optional:
+ *   SARVAM_APP_VERSION    default 1
+ *   SELF_WEBHOOK_URL      this web app's /exec URL (where Sarvam posts the call
+ *                         outcome, which this same script routes to "voice ai")
+ */
+var SARVAM_LANG = {
+  en: 'English', hi: 'Hindi', kn: 'Kannada', te: 'Telugu', ta: 'Tamil',
+  mr: 'Marathi', bn: 'Bengali', gu: 'Gujarati', ml: 'Malayalam', pa: 'Punjabi'
+};
+
+function placeSarvamCall(d) {
+  var p = PropertiesService.getScriptProperties();
+  var apiKey = p.getProperty('SARVAM_API_KEY');
+  var orgId = p.getProperty('SARVAM_ORG_ID');
+  var wsId = p.getProperty('SARVAM_WORKSPACE_ID');
+  var appId = p.getProperty('SARVAM_APP_ID');
+  var connectionId = p.getProperty('SARVAM_CONNECTION_ID');
+  var agentNumber = p.getProperty('SARVAM_AGENT_NUMBER');
+  if (!apiKey || !orgId || !wsId || !appId || !connectionId || !agentNumber) return;
+
+  var phone = d.mobile || d.phone || '';
+  if (!phone) return;
+  var appVersion = Number(p.getProperty('SARVAM_APP_VERSION') || '1');
+  var webhookUrl = p.getProperty('SELF_WEBHOOK_URL') || ScriptApp.getService().getUrl();
+
+  var body = {
+    app_config: {
+      app_id: appId,
+      app_version: appVersion,
+      connection_config: { connection_id: connectionId, agent_phone_number: agentNumber },
+      agent_variables: {
+        name: d.name || '',
+        language: d.language || '',
+        source: d.source || 'callback'
+      },
+      app_overrides: { initial_language_name: SARVAM_LANG[d.language] || 'English' }
+    },
+    user_config: { user_phone_number: phone }
+  };
+  if (webhookUrl) body.webhook_config = { url: webhookUrl };
+
+  try {
+    UrlFetchApp.fetch(
+      'https://apps.sarvam.ai/api/outbounds/v1/orgs/' + orgId + '/workspaces/' + wsId + '/outbounds',
+      {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { 'X-API-Key': apiKey },
+        payload: JSON.stringify(body),
+        muteHttpExceptions: true
+      }
+    );
+  } catch (err) {
+    // best-effort: the callback row is already saved, so a human can follow up
   }
 }

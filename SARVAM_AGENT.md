@@ -8,6 +8,34 @@ The agent handles two kinds of call, told apart by the `{{kind}}` variable:
 
 ---
 
+## 0. Callback intake mode (current serverless setup)
+
+A callback submission on the website triggers the agent to call that person (the Apps Script places the call). In this setup the agent **collects details and hands off** — it does **not** book live (no backend tools). On the call:
+
+1. Greet `{{name}}` by first name in `{{language}}`, say you're HappySmile's **automated assistant**, and why you're calling (they requested a callback online). Ask if now is a good time.
+2. **Collect the needed details:**
+   - Which **treatment** they're interested in.
+   - Preferred **clinic / city**.
+   - Preferred **date and time**.
+3. Answer only **simple** questions (how booking works, clinic locations, opening hours).
+4. For anything you can't or shouldn't answer — exact prices, clinical/medical questions, special requests, anything beyond scheduling — say: **"Our representative will call you back shortly to help with that."** Never guess.
+5. Keep it short, warm, and in their language; close by confirming a representative/clinic will follow up.
+
+### Set these variables before the call ends — they fill the **voice ai** tab
+
+| Variable | Fills column | Values / notes |
+| --- | --- | --- |
+| `clinic` | Clinic | preferred clinic / city |
+| `treatment` | Treatment | treatment of interest |
+| `date` | Preferred date | preferred day |
+| `slot` | Slot | preferred time |
+| `outcome` | Outcome | `Interested` / `Booking requested` / `Needs representative` / `Not interested` / `No answer` |
+| `notes` | Notes | short summary; when handing off, the exact question + "representative to call" |
+
+Whenever you use the representative line, set `outcome = "Needs representative"` and put the question in `notes`. (`name` and `phone` are passed in and echoed back automatically.)
+
+---
+
 ## 1. Variables (set these on the agent / passed in by the campaign)
 
 These arrive with each lead (from the `CampaignLead.variables` + top-level fields in `INTEGRATION.md`). Pass **human-readable** values where possible (e.g. "Braces & Aligners", not `braces-aligners`).
