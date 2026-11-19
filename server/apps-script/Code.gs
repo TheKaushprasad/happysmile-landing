@@ -1,28 +1,49 @@
 /**
- * HappySmile — Google Sheets intake (sheet: "Happy smile").
+ * HappySmile — Google Sheets intake (spreadsheet: "Happy smile").
  *
- * Paste this into that spreadsheet:
- *   Extensions → Apps Script → paste → Deploy → New deployment →
- *   Web app → Execute as: Me, Who has access: Anyone → Deploy → copy the URL.
+ * One web app for everything. Deploy once and use the SAME URL for:
+ *   - the website backend  (server/.env -> SHEETS_WEBHOOK_URL)
+ *   - the Sarvam call-completion webhook
  *
- * Put that URL in server/.env as SHEETS_WEBHOOK_URL. The backend POSTs one JSON
- * object per submission; bookings go to the "booking" tab and callback requests
- * to the "callback request" tab.
+ * Routing by payload:
+ *   - a call outcome (has "outcome" or "status")  -> "voice ai" tab
+ *   - a booking submission (type = "Booking")      -> "booking" tab
+ *   - a callback request                           -> "callback request" tab
+ *
+ * Deploy: Extensions -> Apps Script -> paste -> Deploy -> New deployment ->
+ * Web app (Execute as: Me, Who has access: Anyone) -> copy the URL.
  */
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(20000); // avoid races when two submissions arrive together
+  lock.waitLock(20000);
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var d = JSON.parse(e.postData.contents);
-    var tabName = d.type === 'Booking' ? 'booking' : 'callback request';
-    var sheet = ss.getSheetByName(tabName) || ss.insertSheet(tabName);
-    sheet.appendRow([
+
+    // 1) Voice-agent call outcome -> "voice ai" tab
+    if (d.outcome || d.status) {
+      appendTo(ss, 'voice ai', [
+        new Date(),
+        d.name || '',
+        d.phone || d.mobile || '',
+        d.clinic || '',
+        d.treatment || '',
+        d.date || '',
+        d.slot || '',
+        d.outcome || d.status || '',
+        d.notes || ''
+      ]);
+      return ok('voice ai');
+    }
+
+    // 2) Website form submission -> "booking" or "callback request" tab
+    var tab = d.type === 'Booking' ? 'booking' : 'callback request';
+    appendTo(ss, tab, [
       d.timestamp || new Date().toISOString(),
       d.type || '',
       d.reference || '',
       d.name || '',
-      d.mobile || '',
+      d.mobile || d.phone || '',
       d.treatment || '',
       d.clinic || '',
       d.date || '',
@@ -31,9 +52,7 @@ function doPost(e) {
       d.consent || '',
       d.source || ''
     ]);
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: true, tab: tabName }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ok(tab);
   } catch (err) {
     return ContentService
       .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
@@ -41,4 +60,15 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function appendTo(ss, name, row) {
+  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
+  sheet.appendRow(row);
+}
+
+function ok(tab) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, tab: tab }))
+    .setMimeType(ContentService.MimeType.JSON);
 }

@@ -33,6 +33,8 @@ Every submission is appended to the **Happy smile** spreadsheet — bookings to 
 
 `/api/leads` then POSTs each submission to that URL, which appends a row (Timestamp, Type, Reference, Name, Mobile, Treatment, Clinic, Date, Slot, Language, Consent, Source) to the right tab. Until the URL is set, the server logs the row instead (`[sheets:demo] would append row`).
 
+The **same web-app URL** also accepts Sarvam **call outcomes** (payloads with `outcome`/`status`) and appends them to the **voice ai** tab — so point your Sarvam call-completion webhook at this one URL too.
+
 ## How the callback works
 
 When someone submits the callback form, `/api/leads` calls Sarvam's **Instant Outbound** endpoint:
