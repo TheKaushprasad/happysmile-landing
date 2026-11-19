@@ -17,6 +17,12 @@ export const CONFIG = {
   // Public URL Sarvam should POST call outcomes to, e.g.
   // https://api.happysmile.example/api/webhooks/sarvam
   publicWebhookUrl: process.env.PUBLIC_WEBHOOK_URL ?? '',
+  sheets: {
+    // Google Apps Script web-app URL that appends a row to the Bookings sheet.
+    webhookUrl: process.env.SHEETS_WEBHOOK_URL ?? '',
+    // The HappySmile Bookings spreadsheet (for reference).
+    spreadsheetId: process.env.SHEETS_SPREADSHEET_ID ?? '1Rck9CQKla0dz-xp5_8VHDqXvcdsvot2nAQKvfUaHjg8',
+  },
   webhookSecret: process.env.WEBHOOK_SECRET ?? '',
   callingHours: { startHour: 9, endHour: 19 },
 }

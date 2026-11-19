@@ -23,6 +23,16 @@ Starts on **http://localhost:3001** in **DEMO mode** (no Sarvam key → it logs 
 | `GET /health` | You | Liveness + mode |
 | `GET /api/_debug/snapshot` | You (dev) | Peek at the in-memory bookings/leads/DND |
 
+## Logging bookings to Google Sheets
+
+Every submission is appended to the **HappySmile Bookings** sheet. Setup (no Google Cloud / service account needed):
+
+1. Open the sheet → **Extensions → Apps Script**.
+2. Paste `server/apps-script/Code.gs`, then **Deploy → New deployment → Web app** (Execute as: *Me*, Who has access: *Anyone*). Copy the web-app URL.
+3. Put it in `server/.env` as `SHEETS_WEBHOOK_URL` and restart.
+
+`/api/leads` then POSTs each booking/callback to that URL, which appends a row under the headers (Timestamp, Type, Reference, Name, Mobile, Treatment, Clinic, Date, Slot, Language, Consent, Source). Until the URL is set, the server logs the row instead (`[sheets:demo] would append row`).
+
 ## How the callback works
 
 When someone submits the callback form, `/api/leads` calls Sarvam's **Instant Outbound** endpoint:
