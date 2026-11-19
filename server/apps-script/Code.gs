@@ -6,12 +6,19 @@
  *   - the Sarvam call-completion webhook
  *
  * Routing by payload:
- *   - a call outcome (has "outcome" or "status")  -> "voice ai" tab
- *   - a booking submission (type = "Booking")      -> "booking" tab
- *   - a callback request                           -> "callback request" tab
+ *   - a call outcome (has "outcome"/"status")  -> "voice ai" tab
+ *   - a booking submission (type = "Booking")   -> "booking" tab
+ *   - a callback request                        -> "callback request" tab
+ *
+ * HEADER-DRIVEN: each row is built from the destination tab's OWN header row,
+ * matching header names (case-insensitive) to incoming fields. So you can add,
+ * remove or reorder columns on any tab by editing its headers — no redeploy
+ * needed. A header with no matching field is left blank.
  *
  * Deploy: Extensions -> Apps Script -> paste -> Deploy -> New deployment ->
- * Web app (Execute as: Me, Who has access: Anyone) -> copy the URL.
+ * Web app (Execute as: Me, Who has access: Anyone) -> copy the URL. To update
+ * later: Deploy -> Manage deployments -> edit -> Version: New version -> Deploy
+ * (the URL stays the same).
  */
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -20,39 +27,51 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var d = JSON.parse(e.postData.contents);
 
-    // 1) Voice-agent call outcome -> "voice ai" tab
-    if (d.outcome || d.status) {
-      appendTo(ss, 'voice ai', [
-        new Date(),
-        d.name || '',
-        d.phone || d.mobile || '',
-        d.clinic || '',
-        d.treatment || '',
-        d.date || '',
-        d.slot || '',
-        d.outcome || d.status || '',
-        d.notes || ''
-      ]);
-      return ok('voice ai');
-    }
+    var tab;
+    if (d.outcome || d.status) tab = 'voice ai';
+    else if (d.type === 'Booking') tab = 'booking';
+    else tab = 'callback request';
 
-    // 2) Website form submission -> "booking" or "callback request" tab
-    var tab = d.type === 'Booking' ? 'booking' : 'callback request';
-    appendTo(ss, tab, [
-      d.timestamp || new Date().toISOString(),
-      d.type || '',
-      d.reference || '',
-      d.name || '',
-      d.mobile || d.phone || '',
-      d.treatment || '',
-      d.clinic || '',
-      d.date || '',
-      d.slot || '',
-      d.language || '',
-      d.consent || '',
-      d.source || ''
-    ]);
-    return ok(tab);
+    var sheet = ss.getSheetByName(tab) || ss.insertSheet(tab);
+
+    // Value for every header name we might see (lowercased keys).
+    var phone = d.mobile || d.phone || '';
+    var values = {
+      'timestamp': d.timestamp || new Date().toISOString(),
+      'date & time': d.timestamp || new Date().toISOString(),
+      'type': d.type || '',
+      'reference': d.reference || '',
+      'ref': d.reference || '',
+      'name': d.name || '',
+      'phone': phone,
+      'mobile': phone,
+      'phone number': phone,
+      'treatment': d.treatment || '',
+      'clinic': d.clinic || '',
+      'date': d.date || '',
+      'preferred date': d.date || '',
+      'slot': d.slot || '',
+      'time': d.slot || '',
+      'language': d.language || '',
+      'preferred language': d.language || '',
+      'consent': d.consent || '',
+      'source': d.source || '',
+      'outcome': d.outcome || d.status || '',
+      'status': d.outcome || d.status || '',
+      'notes': d.notes || ''
+    };
+
+    var lastCol = Math.max(1, sheet.getLastColumn());
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var row = headers.map(function (h) {
+      var key = String(h).trim().toLowerCase();
+      return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : '';
+    });
+    sheet.appendRow(row);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, tab: tab }))
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService
       .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
@@ -60,15 +79,4 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
-}
-
-function appendTo(ss, name, row) {
-  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
-  sheet.appendRow(row);
-}
-
-function ok(tab) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, tab: tab }))
-    .setMimeType(ContentService.MimeType.JSON);
 }
